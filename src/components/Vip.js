@@ -22,8 +22,7 @@ export default function VIPDetails() {
     availability: "",
     price: "",
     city: "",
-    media: [],
-    newMedia: [],
+    media: null,
   });
 
   useEffect(() => {
@@ -44,8 +43,7 @@ export default function VIPDetails() {
         availability: vipTour.availability || "",
         price: vipTour.price || "",
         city: vipTour.city || "",
-        media: vipTour.media || [],
-        newMedia: [],
+        media: vipTour.media || null,
       });
     }
   }, [vipTour]);
@@ -59,30 +57,28 @@ export default function VIPDetails() {
   };
 
   const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
+    const file = e.target.files[0];
     setFormData((prev) => ({
       ...prev,
-      newMedia: files,
+      media: file,
     }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Log the formData to check its values
     console.log("Form Data Before Submission:", formData);
 
     const updatedData = new FormData();
 
     for (const key in formData) {
-      if (key === "newMedia") {
-        formData.newMedia.forEach((file) => updatedData.append("media", file));
+      if (key === "media" && formData.media) {
+        updatedData.append("media", formData.media); // Append single image
       } else {
         updatedData.append(key, formData[key]);
       }
     }
 
-    // Log the FormData to see what is being sent
     for (let pair of updatedData.entries()) {
       console.log(`${pair[0]}: ${pair[1]}`);
     }
@@ -174,36 +170,24 @@ export default function VIPDetails() {
             {/* Media */}
             <div className="border border-gray-300 rounded-lg p-4">
               <h2 className="text-lg font-semibold">Media</h2>
-              {Array.isArray(vipTour.media) && vipTour.media.length > 0 ? (
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  {vipTour.media.map((mediaItem, index) => {
-                    if (mediaItem.type.startsWith("image")) {
-                      return (
-                        <img
-                          key={index}
-                          src={`${mediaItem.url}`}
-                          alt={`Media ${index + 1}`}
-                          className="w-full h-auto rounded-md"
-                        />
-                      );
-                    } else if (mediaItem.type.startsWith("video")) {
-                      return (
-                        <video
-                          key={index}
-                          src={`${mediaItem.url}`}
-                          controls
-                          className="w-full h-auto rounded-md"
-                        />
-                      );
-                    } else {
-                      return (
-                        <p key={index} className="text-sm text-gray-500">
-                          Unsupported media type
-                        </p>
-                      );
-                    }
-                  })}
-                </div>
+              {vipTour.media ? (
+                vipTour.media.type.startsWith("image") ? (
+                  <img
+                    src={vipTour.media.url}
+                    alt="Media"
+                    className="w-full h-auto rounded-md"
+                  />
+                ) : vipTour.media.type.startsWith("video") ? (
+                  <video
+                    src={vipTour.media.url}
+                    controls
+                    className="w-full h-auto rounded-md"
+                  />
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    Unsupported media type
+                  </p>
+                )
               ) : (
                 <p>No media available</p>
               )}

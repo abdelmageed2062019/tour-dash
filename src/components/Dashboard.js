@@ -89,9 +89,11 @@ export default function Dashboard() {
                 key={i}
                 className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg"
               >
-                <video controls className="w-12 h-12 rounded-lg object-cover">
-                  <source src={tour.media[0].url || ""} type="video/mp4" />
-                </video>
+                <img
+                  alt={`tour-media-${tour._id}`}
+                  className="w-12 h-12 object-cover rounded-lg"
+                  src={tour.media.url}
+                />
                 <div className="flex-1">
                   <h4 className="font-medium">{tour?.title}</h4>
                   <p className="text-sm text-gray-500">{tour.type}</p>

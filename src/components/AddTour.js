@@ -21,7 +21,7 @@ const AddTour = () => {
     note: "", // New field
     languages: [],
     city: "",
-    media: [], // Array of media objects
+    media: null, // Array of media objects
     prices: {
       privateTourWithLunch: {
         single: 0,
@@ -90,24 +90,12 @@ const AddTour = () => {
     }));
   };
 
-  const handleFileChange = (e, type) => {
-    const files = Array.from(e.target.files);
-
-    if (type === "images") {
-      // Filter for image files
-      const imageFiles = files.filter((file) => file.type.startsWith("image"));
-      setFormData((prev) => ({
-        ...prev,
-        media: [...prev.media, ...imageFiles], // Append images to existing media
-      }));
-    } else if (type === "videos") {
-      // Filter for video files
-      const videoFiles = files.filter((file) => file.type.startsWith("video"));
-      setFormData((prev) => ({
-        ...prev,
-        media: [...prev.media, ...videoFiles], // Append videos to existing media
-      }));
-    }
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setFormData((prev) => ({
+      ...prev,
+      media: file,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -115,17 +103,14 @@ const AddTour = () => {
     setLoading(true);
 
     const data = new FormData();
+    if (formData.media) {
+      data.append("media", formData.media); // Append the single image file
+    }
 
-    // Append all media files (both images and videos)
-    formData.media.forEach((file) => {
-      data.append("media", file);
-    });
-
-    // Append other fields
     for (const key in formData) {
       if (key !== "media") {
         if (typeof formData[key] === "object") {
-          data.append(key, JSON.stringify(formData[key])); // Convert objects to JSON strings
+          data.append(key, JSON.stringify(formData[key]));
         } else {
           data.append(key, formData[key]);
         }
@@ -306,19 +291,6 @@ const AddTour = () => {
               accept="image/*" // Filter for images
               multiple
               onChange={(e) => handleFileChange(e, "images")}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Upload Videos
-            </label>
-            <input
-              type="file"
-              accept="video/*" // Filter for videos
-              multiple
-              onChange={(e) => handleFileChange(e, "videos")}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
             />
           </div>

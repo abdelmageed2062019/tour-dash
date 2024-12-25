@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchTourAsync, updateTourAsync } from "../app/tours/toursSlice";
+import Loading from "./Loading";
 
 const UpdateTour = () => {
   const dispatch = useDispatch();
@@ -20,7 +21,7 @@ const UpdateTour = () => {
     note: "", // New field
     languages: [],
     city: "",
-    media: [], // Array of media objects
+    media: null, // Array of media objects
     prices: {
       privateTourWithLunch: {
         single: 0,
@@ -57,6 +58,8 @@ const UpdateTour = () => {
     },
   });
 
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const fetchTour = async () => {
       try {
@@ -64,17 +67,18 @@ const UpdateTour = () => {
         if (response.payload) {
           setFormData({
             ...response.payload,
-            media: response.payload.media || [],
+            media: response.payload.media || null,
           });
         }
       } catch (error) {
         console.error("Error fetching tour data:", error);
+      } finally {
+        setLoading(false); // Set loading to false once data is fetched
       }
     };
 
     fetchTour();
   }, [id, dispatch]);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -97,42 +101,28 @@ const UpdateTour = () => {
     }));
   };
 
-  const handleFileChange = (e, type) => {
-    const files = Array.from(e.target.files);
-
-    if (type === "images") {
-      // Filter for image files
-      const imageFiles = files.filter((file) => file.type.startsWith("image"));
-      setFormData((prev) => ({
-        ...prev,
-        media: [...prev.media, ...imageFiles], // Append images to existing media
-      }));
-    } else if (type === "videos") {
-      // Filter for video files
-      const videoFiles = files.filter((file) => file.type.startsWith("video"));
-      setFormData((prev) => ({
-        ...prev,
-        media: [...prev.media, ...videoFiles], // Append videos to existing media
-      }));
-    }
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]; // Get the first file only
+    setFormData((prev) => ({
+      ...prev,
+      media: file, // Set the single file
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const data = new FormData();
 
-    // Append media files
-    formData.media.forEach((media) => {
-      data.append("media", media.file); // Assuming media.file is the actual file object
-    });
+    // Append the single image file
+    if (formData.media) {
+      data.append("media", formData.media);
+    }
 
     // Append other fields
     for (const key in formData) {
       if (key !== "media") {
-        if (Array.isArray(formData[key])) {
-          data.append(key, JSON.stringify(formData[key])); // Convert arrays to JSON strings
-        } else if (key === "prices") {
-          data.append(key, JSON.stringify(formData[key])); // Convert prices to JSON string
+        if (typeof formData[key] === "object") {
+          data.append(key, JSON.stringify(formData[key])); // Convert objects/arrays to JSON
         } else {
           data.append(key, formData[key]);
         }
@@ -150,6 +140,10 @@ const UpdateTour = () => {
       console.error("Error updating the tour:", error);
     }
   };
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <div className="container mx-auto p-4">
@@ -281,22 +275,8 @@ const UpdateTour = () => {
               </label>
               <input
                 type="file"
-                accept="image/*" // Filter for images
-                multiple
-                onChange={(e) => handleFileChange(e, "images")}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Upload Videos
-              </label>
-              <input
-                type="file"
-                accept="video/*" // Filter for videos
-                multiple
-                onChange={(e) => handleFileChange(e, "videos")}
+                accept="image/*" // Restrict to images
+                onChange={handleFileChange}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
               />
             </div>
